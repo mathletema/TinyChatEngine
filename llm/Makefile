@@ -6,6 +6,9 @@ CXXFLAGS = -std=c++11 -pthread -Ofast
 DISABLE_CUDA ?= 0
 DEC_SHARED_MEM ?= 0
 
+# CoreML flag
+DISABLE_COREML ?= 0
+
 # customize define
 DEFINE =
 CHATNAME = chat
@@ -40,6 +43,15 @@ ifeq ($(DISABLE_CUDA), 0)
 	endif
 endif
 
+# Check if CoreML is available
+# todo: make this checking more robust
+ifeq ($(DISABLE_COREML), 0)
+	ifeq ($(shell uname -s),Darwin)
+$(info CoreML is available!)
+		COREML_AVAILABLE := 1
+	endif
+endif
+	
 ifdef CUDA_AVAILABLE
 $(info CUDA is available!)
 	ifeq ($(OS),Windows_NT)
@@ -64,12 +76,23 @@ $(info Detected CUDA_PATH: $(CUDA_HOME))
 	LIB_SRC_CUDA_CC = $(wildcard $(LIB_DIR)/cuda/*.cc)
 	LIB_SRC_CUDA_CU = $(wildcard $(LIB_DIR)/cuda/*.cu) $(wildcard src/*.cu) $(wildcard src/nn_modules/cuda/*.cu) $(wildcard src/ops/cuda/*.cu)
 	INCLUDE_DIRS += -I./include/ops/cuda
+else ifdef COREML_AVAILABLE
+$(info CUDA is unavailable! Using CoreML code)
+	LIB_SRC += $(wildcard src/nn_modules/coreml/*.cc)
 else
-$(info CUDA is unavailable!)
+$(info CUDA and CoreML are unavailable! Using original non-cuda code)
 	LIB_SRC += $(wildcard src/nn_modules/non_cuda/*.cc)
 endif
 
-ifeq ($(shell uname -m),x86_64)
+ifdef COREML_AVAILABLE
+# For Darwin platforms with CoreML
+	CXX = clang++
+	LDFLAGS += -framework Foundation -framework CoreML
+# AVX, remove once fully ported to coreml
+	LIB_AVX_SRC = $(wildcard $(LIB_DIR)/avx/*.cc)
+	LIB_SRC += $(LIB_AVX_SRC)
+	CXXFLAGS += -mavx2 -mfma -ffast-math -DUSE_INT8_INT4_PRODUCT -fpermissive -DQM_x86
+else ifeq ($(shell uname -m),x86_64)
 	ifdef CUDA_AVAILABLE
 		ifeq ($(OS),Windows_NT)
 # For Windows platforms with CUDA

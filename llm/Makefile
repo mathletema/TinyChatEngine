@@ -2,6 +2,12 @@
 CXX = g++
 CXXFLAGS = -std=c++11 -pthread -Ofast
 
+# TODO: possibly remove this after done
+ifeq ($(DEBUG),1)
+$(info DEBUG starting)
+	CXXFLAGS += -g
+endif
+
 # CUDA flag
 DISABLE_CUDA ?= 0
 DEC_SHARED_MEM ?= 0
@@ -13,6 +19,10 @@ DISABLE_COREML ?= 0
 DEFINE =
 CHATNAME = chat
 CXXFLAGS += $(DEFINE)
+
+# project path
+PROJECT_PATH = "$(shell realpath ..)"
+CXXFLAGS += -DPROJECT_PATH=\"$(PROJECT_PATH)\"
 
 # Executable and source files
 TEST_TARGET_GENERAL = test_Int8OPTAttention test_Int8OPTDecoderLayer test_Int8OPTDecoder test_OPTForCausalLM test_OPTTokenizer test_LLaMATokenizer test_OPTGenerate test_Fp32llamaAttention test_Fp32llamaDecoderLayer test_Fp32llamaDecoder test_Fp32llamaForCausalLM test_Fp32OPTAttention test_Fp32OPTDecoderLayer test_Fp32OPTDecoder test_Fp32OPTForCausalLM
@@ -78,7 +88,10 @@ $(info Detected CUDA_PATH: $(CUDA_HOME))
 	INCLUDE_DIRS += -I./include/ops/cuda
 else ifdef COREML_AVAILABLE
 $(info CUDA is unavailable! Using CoreML code)
+	CXXFLAGS += -DCOREML_AVAILABLE -ObjC++
+	INCLUDE_DIRS += -Icoreml_engine/include
 	LIB_SRC += $(wildcard src/nn_modules/coreml/*.cc)
+	LIB_SRC_COREML_MM = $(wildcard coreml_engine/src/*.mm)
 else
 $(info CUDA and CoreML are unavailable! Using original non-cuda code)
 	LIB_SRC += $(wildcard src/nn_modules/non_cuda/*.cc)
@@ -160,6 +173,7 @@ SRC += $(OPS)
 SRC += $(LIB_SRC)
 SRC_CUDA_CC = $(LIB_SRC_CUDA_CC)
 SRC_CUDA_CU = $(LIB_SRC_CUDA_CU)
+SRC_COREML_MM = $(LIB_SRC_COREML_MM)
 
 # Default target
 all: $(TARGET)
@@ -194,6 +208,22 @@ $(BUILDDIR)/%.o: %.cu
 $(PROFILEDIR)/%.o: %.cu
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) -DPROFILER -c $< -o $@
+endif
+
+# Pattern rules for coreml
+ifdef COREML_AVAILABLE
+$(info $(SRC_COREML_MM))
+OBJS += $(addprefix $(BUILDDIR)/,$(SRC_COREML_MM:.mm=.o))
+PROFILE_OBJS += $(addprefix $(BUILDDIR)/,$(SRC_COREML_MM:.mm=.o))
+
+$(BUILDDIR)/%.o: %.mm
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) -c $< -o $@
+
+$(PROFILEDIR)/%.o: %.mm
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) -c $< -o $@
+
 endif
 
 # Pattern rules for non-CUDA

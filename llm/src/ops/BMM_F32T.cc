@@ -1,9 +1,13 @@
 #include "operators.h"
 #include "utils.h"
 
+#include "coreml_engine.h"
+
 void load_BMM_F32T(BMM_F32T &op, std::string prefix) { read_to_array((prefix + "/alpha.bin").c_str(), &op.alpha, 1); }
 
-BMM_F32T::BMM_F32T(float _alpha) { this->alpha = _alpha; }
+BMM_F32T::BMM_F32T(float _alpha) {
+    this->alpha = _alpha;
+}
 
 void BMM_F32T::forward(const Matrix3D<float> &a, const Matrix3D<float> &weight, Matrix3D<float> &c) {
     const Matrix3D<float> b = weight;
@@ -16,6 +20,8 @@ void BMM_F32T::forward(const Matrix3D<float> &a, const Matrix3D<float> &weight, 
     assert(a.m_dim_z == b.m_dim_z);  // k
     assert(a.m_dim_y == c.m_dim_y);  // m
     assert(b.m_dim_y == c.m_dim_z);  // n
+
+    CoreML_log("BMM_F32T Called on [%d] %dx%d @ %dx%d\n", a.m_dim_x, a.m_dim_y, a.m_dim_z, b.m_dim_y, b.m_dim_z);
 
     struct matmul_params params;
     params.A.row = a.m_dim_y;

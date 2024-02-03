@@ -8,6 +8,10 @@
 #include "operators.h"
 #include "utils.h"
 
+#include "coreml_engine.h"
+
+#include <cassert>
+
 static float *attn_weights_arr;
 static float ***key_states_arr_cache;
 static float ***value_states_arr_cache;
@@ -160,7 +164,8 @@ inline void Int4llamaAttention::unshape(Matrix3D<float> shaped, Matrix3D<float> 
 }
 
 Int4llamaAttention::Int4llamaAttention(std::string param_path, const struct model_config config, int layer_idx) {
-    std::cout << "Ishank calling Int4llamaAttention, wassup?" << std::endl;
+    CoreML_init();
+    CoreML_log("hey from int4 func!");
 #if !(DEC_SHARED_MEM)
     uint8_t *q_weight, *k_weight, *v_weight, *o_weight, *qkv_weight;
     allocate_aligned_memory(q_weight, (config.embed_dim * config.embed_dim * sizeof(uint8_t)) / 2);

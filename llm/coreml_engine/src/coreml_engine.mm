@@ -1,3 +1,11 @@
+//  ██████╗ ██████╗ ██████╗ ███████╗███╗   ███╗██╗         ███████╗███╗   ██╗ ██████╗ ██╗███╗   ██╗███████╗
+// ██╔════╝██╔═══██╗██╔══██╗██╔════╝████╗ ████║██║         ██╔════╝████╗  ██║██╔════╝ ██║████╗  ██║██╔════╝
+// ██║     ██║   ██║██████╔╝█████╗  ██╔████╔██║██║         █████╗  ██╔██╗ ██║██║  ███╗██║██╔██╗ ██║█████╗  
+// ██║     ██║   ██║██╔══██╗██╔══╝  ██║╚██╔╝██║██║         ██╔══╝  ██║╚██╗██║██║   ██║██║██║╚██╗██║██╔══╝  
+// ╚██████╗╚██████╔╝██║  ██║███████╗██║ ╚═╝ ██║███████╗    ███████╗██║ ╚████║╚██████╔╝██║██║ ╚████║███████╗
+//  ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝     ╚═╝╚══════╝    ╚══════╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝╚═╝  ╚═══╝╚══════╝
+                                                                                                        
+
 #include "coreml_engine.h"
 #include "CoreML/CoreML.h"
 
@@ -11,76 +19,71 @@ bool __COREML_RUNNING = false;
 FILE *__COREML_LOG_FP;
 MLModel *model;
 
-MLMultiArray *create_array(int dim) {
-    NSError *error = nil;
-
-    MLMultiArray *multiarray = [[MLMultiArray alloc] initWithShape:@[ @(dim), @128 ]
-                                                          dataType:MLMultiArrayDataTypeFloat
-                                                             error:&error];
-
-    CoreML_handle_errors(error);
-
-    return multiarray;
-}
+/***************
+ * START TESTS *
+ ***************/
 
 void test_conversion() {
-    auto x = create_array(40);
-    CoreML_log("40x128 stride: [%d, %d]\n", x.strides[0].intValue, x.strides[1].intValue);
+    NSError *error = nil;
 
     int a = 5;
     int b = 4;
     int c = 3;
-    float *arr = (float *)malloc(a * b * c * sizeof(float));
-    CoreML_log("arr located at %p\n", (void *)arr);
 
+    float *arr = (float *) malloc(a * b * c * sizeof(float));
     Matrix3D<float> matrix = Matrix3D<float>(arr, a, b, c);
 
-    // populate randomly
-    for (int i = 0; i < a; i++) {
-        for (int j = 0; j < b; j++) {
-            for (int k = 0; k < c; k++) {
+    for (int i = 0; i < a; i++)
+        for (int j = 0; j < b; j++) 
+            for (int k = 0; k < c; k++)
                 matrix(i, j, k) = (float)(((double)rand()) / ((double)RAND_MAX));
-            }
-        }
-    }
 
-    // print current matrix
     CoreML_log("Inital matrix: \n");
     for (int i = 0; i < a; i++) {
         for (int j = 0; j < b; j++) {
-            CoreML_log(">  ");
+            CoreML_log("   ");
             for (int k = 0; k < c; k++) {
                 CoreML_log("%.2f ", matrix(i, j, k));
             }
             CoreML_log("\n");
         }
-        CoreML_log("> \n");
+        CoreML_log("  \n");
     }
 
-    // convert
-    MLMultiArray *matrix_objc = Matrix3D_to_MLMultiArray(matrix);
+    MLMultiArray *matrix_objc = CoreML_Matrix3D_to_MLMultiArray(matrix);
 
-    // print converted matrix
     CoreML_log("Converted matrix: \n");
     for (int i = 0; i < a; i++) {
         for (int j = 0; j < b; j++) {
-            CoreML_log("> ");
+            CoreML_log("  ");
             for (int k = 0; k < c; k++) {
                 CoreML_log("%.2f ", [[matrix_objc objectForKeyedSubscript:@[ @(i), @(j), @(k) ]] floatValue]);
             }
             CoreML_log("\n");
         }
-        CoreML_log("> \n");
+        CoreML_log("  \n");
     }
 
-    // free!
+    MLMultiArray *matrix_objc_2 = CoreML_arr_to_MLMultiArray(arr, a, b, c, b*c, c, 1);
+
+    CoreML_log("Converted matrix: \n");
+    for (int i = 0; i < a; i++) {
+        for (int j = 0; j < b; j++) {
+            CoreML_log("  ");
+            for (int k = 0; k < c; k++) {
+                CoreML_log("%.2f ", [[matrix_objc_2 objectForKeyedSubscript:@[ @(i), @(j), @(k) ]] floatValue]);
+            }
+            CoreML_log("\n");
+        }
+        CoreML_log("  \n");
+    }
+
     free(arr);
 }
 
 void test_inference() {
     NSError *error = nil;
 
-    // initialize
     CoreML_log("creating arrays!\n");
     MLMultiArray *arr1 = [[MLMultiArray alloc]
         initWithShape:@[ @(1), @(128) ]
@@ -90,6 +93,10 @@ void test_inference() {
         initWithShape:@[ @(1), @(128) ]
         dataType:MLMultiArrayDataTypeFloat
         error:&error];
+    MLMultiArray *arr_out = [[MLMultiArray alloc]
+        initWithShape:@[ @(1), @(1) ]
+        dataType:MLMultiArrayDataTypeFloat
+        error:&error];
     
     // populate
     CoreML_log("populating arrays!\n");
@@ -97,7 +104,7 @@ void test_inference() {
         [arr1 setObject:@(i) forKeyedSubscript:@[ @(0), @(i) ]];
     }
     for (int i = 0; i < 128; i++) {
-        [arr2 setObject:@(i % 3) forKeyedSubscript:@[ @(0), @(i) ]];
+        [arr2 setObject:@(1) forKeyedSubscript:@[ @(0), @(i) ]];
     }
 
     // print
@@ -113,31 +120,27 @@ void test_inference() {
     }
     CoreML_log("\n");
 
-    NSDictionary<NSString *, id> *featureDictionary = @{
-        @"A" : arr1,
-        @"B" : arr2,
-    };
+    CoremL_matmul_128_MLMultiArray(arr1, arr2, arr_out);
 
-    MLDictionaryFeatureProvider *inFeatures = [[MLDictionaryFeatureProvider alloc] initWithDictionary:featureDictionary
-                                                                                                error:&error];
-    CoreML_handle_errors(error);
+    CoreML_log("output[0, 0] = %.2f\n", [[arr_out objectForKeyedSubscript:@[@0, @0]] floatValue]);
+    CoreML_log("should be 8128!\n");
+}
 
-    CoreML_log("running model!\n");
-    id<MLFeatureProvider> outFeatures =
-        [model predictionFromFeatures:inFeatures error:&error];
-    CoreML_handle_errors(error);
-    CoreML_log("done running model!\n");
+void test_matmul_func() {
+    float * a = (float*) malloc(  1 * 128 * sizeof(float));
+    float * b = (float*) malloc(  1 * 128 * sizeof(float));
+    float * c = (float*) malloc(  1 *   1 * sizeof(float));
+    
+    for (int i = 0; i < 128; i++) {  a[i] = i; b[i] = 1;  }
+    c[0] = 0;
 
-    MLMultiArray * output_arr = [[outFeatures featureValueForName:@"output"] multiArrayValue];
-    CoreML_log("output arr num dims: [%d] ", output_arr.shape.count);
-    for (int i = 0; i < output_arr.shape.count; i++) {
-        CoreML_log("%d ", output_arr.shape[i].intValue);
-    }
-    CoreML_log("\n");
+    CoreML_matmul_128(a, b, c, 1, 1, 128);
 
-    CoreML_log("output[0, 0] = %.2f\n", [[output_arr objectForKeyedSubscript:@[@0, @0]] floatValue]);
-    CoreML_log("should be 8086!\n");
+    CoreML_log("Output %f, should be 8128\n", c[0]);
 
+    free(a);
+    free(b);
+    free(c);
 }
 
 void run_tests() {
@@ -148,7 +151,20 @@ void run_tests() {
     CoreML_log("Starting inference test!\n");
     test_inference();
     CoreML_log("Inference test done!\n");
+
+    CoreML_log("Starting matmul func test!\n");
+    test_matmul_func();
+    CoreML_log("Matmul func test done!\n");
 }
+
+/*************
+ * END TESTS *
+ *************/
+
+
+/*******************
+ * MAIN CODE START *
+ *******************/
 
 void CoreML_load_model() {
     CoreML_log("loading model!\n");
@@ -228,25 +244,85 @@ void CoreML_handle_errors(NSError *error) {
     }
 }
 
-MLMultiArray *Matrix3D_to_MLMultiArray(Matrix3D<float> input) {
-    CoreML_log("Attempting to create an MLMultiArray!\n");
-    NSError *error = nil;
+/**************************
+ * ARRAY CONVERSION UTILS *
+ **************************/
 
-    NSArray *strides = @[ @(input.m_dim_y * input.m_dim_z), @(input.m_dim_z), @1 ];
-    CoreML_log("Input strides %d, %d, %d\n", [strides[0] intValue], [strides[1] intValue], [strides[2] intValue]);
+MLMultiArray * CoreML_arr_to_MLMultiArray(float * data, int dim1, int dim2, int s1, int s2) {
+    NSError * error = nil;
+    MLMultiArray * result = [[MLMultiArray alloc] initWithDataPointer:((void *) data)
+                                                shape:@[ @(dim1), @(dim2) ]
+                                             dataType:MLMultiArrayDataTypeFloat32
+                                              strides:@[ @(s1), @(s2) ]
+                                          deallocator:nil
+                                                error:&error];
+    CoreML_handle_errors(error);
+    return result;
+}
 
-    MLMultiArray *multiarray =
-        [[MLMultiArray alloc] initWithDataPointer:((void *)input.m_data)
-                                            shape:@[ @(input.m_dim_x), @(input.m_dim_y), @(input.m_dim_z) ]
-                                         dataType:MLMultiArrayDataTypeFloat32
-                                          strides:@[ @(input.m_dim_y * input.m_dim_z), @(input.m_dim_z), @(1) ]
-                                      deallocator:nil
-                                            error:&error];
+MLMultiArray * CoreML_arr_to_MLMultiArray(float * data, int dim1, int dim2, int dim3, int s1, int s2, int s3) {
+    NSError * error = nil;
+    MLMultiArray * result = [[MLMultiArray alloc] initWithDataPointer:((void *) data)
+                                                shape:@[ @(dim1), @(dim2), @(dim3)]
+                                             dataType:MLMultiArrayDataTypeFloat32
+                                              strides:@[ @(s1), @(s2), @(s3) ]
+                                          deallocator:nil
+                                                error:&error];
+    CoreML_handle_errors(error);
+    return result;
+}
 
+MLMultiArray *CoreML_Matrix3D_to_MLMultiArray(Matrix3D<float> input) {
+    return CoreML_arr_to_MLMultiArray(
+        input.m_data,
+        input.m_dim_x, input.m_dim_y, input.m_dim_z,
+        input.m_dim_y * input.m_dim_z, input.m_dim_z, 1
+    );
+}
+
+
+/**********************
+ * MATMUL 128 WRAPPER *
+ **********************/
+
+void CoremL_matmul_128_MLMultiArray (MLMultiArray * a, MLMultiArray * b, MLMultiArray * c) {
+    NSError * error = nil;
+    // create input object
+    MLDictionaryFeatureProvider *inFeatures = [
+        [MLDictionaryFeatureProvider alloc]
+        initWithDictionary: @{
+                @"A" : a,
+                @"B" : b,
+            }
+        error:&error
+    ];
     CoreML_handle_errors(error);
 
-    CoreML_log("Output strides %d, %d, %d\n", multiarray.strides[0].intValue, multiarray.strides[1].intValue,
-               multiarray.strides[2].intValue);
+    // create output object
+    MLPredictionOptions * opts = [MLPredictionOptions alloc];
+    opts.outputBackings = @{
+        @"output" : c,
+    };
 
-    return multiarray;
+    // run model
+    CoreML_log("running model!\n");
+    [model predictionFromFeatures:inFeatures options:opts error:&error];
+    CoreML_handle_errors(error);
+    CoreML_log("done running model!\n");
+}
+
+void CoreML_matmul_128(float * a, float * b, float * c, int m, int n, int k) {
+    CoreML_log("entry into matmul func!\n");
+
+    assert(k == 128 && "only k = 128 supported!");
+    assert(m >= 1 && m <= 256 && "only 1 <= m <= 256 supported!");
+    assert(n >= 1 && n <= 256 && "only 1 <= n <= 256 supported!");
+
+    NSError * error = nil;
+    
+    MLMultiArray * a__ = CoreML_arr_to_MLMultiArray(a, m, k, k, 1);
+    MLMultiArray * b__ = CoreML_arr_to_MLMultiArray(b, n, k, k, 1);
+    MLMultiArray * c__ = CoreML_arr_to_MLMultiArray(c, m, n, n, 1);
+
+    CoremL_matmul_128_MLMultiArray(a__, b__, c__);
 }

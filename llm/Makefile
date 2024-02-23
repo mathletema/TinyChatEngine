@@ -9,7 +9,12 @@
 
 # Compiler and flags
 CXX = clang++
-CXXFLAGS = -std=c++11 -pthread -Ofast -mavx2 -mfma -ffast-math -DUSE_INT8_INT4_PRODUCT -fpermissive -DQM_x86 -DQM_COREML
+CXXFLAGS = -std=c++11 -pthread -Ofast -mavx2 -mfma -ffast-math -DUSE_INT8_INT4_PRODUCT -fpermissive -DQM_x86
+CXXFLAGS += -ObjC++ -DQM_COREML 
+
+# Add project path so that coreml can load absolute paths
+PROJECT_PATH = "$(shell realpath ..)"
+CXXFLAGS += -DPROJECT_PATH=\"$(PROJECT_PATH)\"
 
 # customize define
 DEFINE =

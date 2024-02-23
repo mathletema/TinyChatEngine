@@ -43,4 +43,8 @@ __global__ void softmax_float(Matrix3D<float> input, Matrix3D<float> output);
 __global__ void softmax_cuda(Matrix3D<float16_t> input, Matrix3D<float16_t> output);
 #endif
 
+#ifdef QM_COREML
+#include "ops/coreml/operators.h"
+#endif
+
 #endif  // OPERATORS_H

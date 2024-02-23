@@ -2,7 +2,7 @@
 
 #include "operators.h"
 
-void softmax(const Matrix3D<float> &input, Matrix3D<float> &output, const int dim) {
+void softmax_coreml(const Matrix3D<float> &input, Matrix3D<float> &output, const int dim) {
     PROFILE_START("softmax");
     int len = input.length();
 

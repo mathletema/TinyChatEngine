@@ -22,41 +22,13 @@ void BMM_F32T_coreml::forward(const Matrix3D<float> &a, const Matrix3D<float> &w
     assert(a.m_dim_y == c.m_dim_y);  // m
     assert(b.m_dim_y == c.m_dim_z);  // n
 
-    coreml::batched_matmul_transposed(a.m_data, b.m_data, c.m_data, b_size, m, n, k);
+    coreml::batched_matmul_transposed(a.m_data, b.m_data, c.m_data, b_size, m, n, k, alpha);
 
-    // struct matmul_params params;
-    // params.A.row = a.m_dim_y;
-    // params.A.column = a.m_dim_z;
-    // params.A.data_ptr = a.m_data;
-    // params.B.row = b.m_dim_y;
-    // params.B.column = b.m_dim_z;
-    // params.B.data_ptr = b.m_data;
-    // params.C.row = c.m_dim_y;
-    // params.C.column = c.m_dim_z;
-    // params.C.data_ptr = c.m_data;
-    // params.opt_params.blk_size = BLK_SIZE;
-    // params.opt_params.num_thread = NUM_THREAD;
-    // params.alpha = alpha;
+    for (int i = 0; i <= b_size * m * n; i++) {
+        c.m_data[i] *= alpha;
+    }
 
-    // matmul::MatmulOperator op = matmul::MatmulOperator();
-
-    // for (int bz = 0; bz < a.m_dim_x; bz++) {
-    //     // if (params.A.column % 8 == 0) // TODO: debug this
-    //     //     op.mat_mul_transposed_fastover_column((const struct matmul_params
-    //     //     *)&params);
-    //     // else
-    //     coreml::matmul_transposed();
-    //     op.mat_mul_transposed(&params);  // TODO: optimize this
-    //     // TODO: apply SIMD here
-    //     for (int i = 0; i < m * n; i++) {
-    //         params.C.data_ptr[i] *= this->alpha;
-    //     }
-    //     params.A.data_ptr += m * k;
-    //     params.B.data_ptr += k * n;
-    //     params.C.data_ptr += m * n;
-    // }
-
-    // PROFILE_END(profile_name);
+    PROFILE_END(profile_name);
 }
 
 void BMM_F32T_coreml::forward_weight_untransposed(const Matrix3D<float> &a, const Matrix3D<float> &weight,

@@ -13,4 +13,14 @@ void handle_errors(NSError * error) {
     }
 }
 
+MLMultiArray * float_to_MLMultiArray(float * data, int m, int n, NSError * error) {
+    MLMultiArray * result = [[MLMultiArray alloc] initWithDataPointer:((void *) data)
+                                                                shape:@[ @(m), @(n) ]
+                                                            dataType:MLMultiArrayDataTypeFloat32
+                                                             strides:@[ @(n), @(1) ]
+                                                         deallocator:nil
+                                                               error:&error];
+    return result;
+}
+
 }

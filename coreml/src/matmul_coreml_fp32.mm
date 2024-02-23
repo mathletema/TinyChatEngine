@@ -17,7 +17,7 @@ void init_batched_matmul_transpose() {
     error = nil;
     
     NSURL *module_path =
-        [NSURL URLWithString:@(PROJECT_PATH "/coreml/modules/matmul_transpose.mlpackage")];
+        [NSURL URLWithString:@(PROJECT_PATH "/coreml/modules/matmul_transpose_128.mlpackage")];
     NSURL *compiled_path = [MLModel compileModelAtURL:module_path
                                                 error:&error];
     handle_errors(error);
@@ -31,8 +31,43 @@ void init_batched_matmul_transpose() {
     handle_errors(error);
 };
 
+// TODO: use asynchronous ANE prediction to avoid blocking pipeline
+
+void matmul_transposed(float * a, float * b, float * c, int m, int n, int k) {
+    if (k != 128) {
+        std::cout << "not well formed!??\n";
+    }
+    MLMultiArray * a__ = float_to_MLMultiArray(a, m, k, error);
+    MLMultiArray * b__ = float_to_MLMultiArray(b, n, k, error);
+    MLMultiArray * c__ = float_to_MLMultiArray(c, m, n, error);
+    handle_errors(error);
+
+    MLDictionaryFeatureProvider *inFeatures = [
+        [MLDictionaryFeatureProvider alloc]
+        initWithDictionary: @{
+                @"x" : a__,
+                @"y" : b__,
+            }
+        error:&error
+    ];
+    handle_errors(error);
+
+    MLPredictionOptions * opts = [MLPredictionOptions alloc];
+    opts.outputBackings = @{
+        @"output" : c__,
+    };
+
+    [model predictionFromFeatures:inFeatures options:opts error:&error];
+    handle_errors(error);
+}
+
 void batched_matmul_transposed(float * a, float * b, float * c, int bz, int m, int n, int k) {
-    std::cout << "Hey what's up!\n";
+    for (int bz_ = 0; bz_ < bz; bz_++) {
+        coreml::matmul_transposed(a, b, c, m, n, k);
+        a += m * k;
+        b += k * n;
+        c += m * n;
+    }
 }
 
 }

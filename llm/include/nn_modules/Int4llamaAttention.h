@@ -77,6 +77,14 @@ class Int4llamaAttention {
     RotaryPosEmb_cuda rotary_pos_emb;
     BMM_F16T qk_bmm, pv_bmm;
     int max_sqlen;
+#elif defined(QM_COREML)
+    Linear_FP_int4 k_proj, v_proj, q_proj, o_proj, qkv_proj;
+    RotaryPosEmb rotary_pos_emb;
+    BMM_F32T_coreml qk_bmm, pv_bmm;
+    void unshape(Matrix3D<float> shaped, Matrix3D<float> unshape, int sqlen);
+    void shape(Matrix3D<float> unshape, Matrix3D<float> shaped, int sqlen);
+    void shape_qkv(Matrix3D<float> unshape, Matrix3D<float> shaped_q, Matrix3D<float> shaped_k,
+                                          Matrix3D<float> shaped_v, int sqlen);
 #else
     Linear_FP_int4 k_proj, v_proj, q_proj, o_proj, qkv_proj;
     RotaryPosEmb rotary_pos_emb;

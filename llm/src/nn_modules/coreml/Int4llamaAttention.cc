@@ -188,8 +188,8 @@ Int4llamaAttention::Int4llamaAttention(std::string param_path, const struct mode
 
     float qk_bmm_alpha;
     read_to_array((param_path + "/qk_bmm/alpha.bin").c_str(), &qk_bmm_alpha, 1);
-    this->qk_bmm = BMM_F32T(qk_bmm_alpha);
-    this->pv_bmm = BMM_F32T(1.0f);
+    this->qk_bmm = BMM_F32T_coreml(qk_bmm_alpha);
+    this->pv_bmm = BMM_F32T_coreml(1.0f);
 
     this->embed_dim = config.embed_dim;
     this->num_heads = config.num_heads;

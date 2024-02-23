@@ -38,6 +38,7 @@ void BMM_F32T_coreml::forward(const Matrix3D<float> &a, const Matrix3D<float> &w
         //     op.mat_mul_transposed_fastover_column((const struct matmul_params
         //     *)&params);
         // else
+        coreml::matmul_transposed();
         op.mat_mul_transposed(&params);  // TODO: optimize this
         // TODO: apply SIMD here
         for (int i = 0; i < m * n; i++) {

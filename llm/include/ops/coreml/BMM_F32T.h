@@ -9,7 +9,7 @@ class BMM_F32T_coreml {
     float alpha;
 
    private:
-    std::string profile_name = "BMM_F32T_creml";
+    std::string profile_name = "BMM_F32T_coreml";
 };
 
 void load_BMM_F32T_coreml(BMM_F32T_coreml &op, std::string prefix);

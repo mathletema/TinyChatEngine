@@ -82,6 +82,7 @@ void down_proj(float* x, float* y, float* out){ printf("I'm down proj\n"); }
 void gate_proj(float * x, float * y, float* out) { printf("I'm gate_proj\n"); }
 
 void static_matmul(float* x, float* y, float* out, int m, int n, int k) {
+    // create the backings
     MLMultiArray * x__ = float_to_MLMultiArray(x, m, k, error);
     MLMultiArray * y__ = float_to_MLMultiArray(y, n, k, error);
     MLMultiArray * out__ = float_to_MLMultiArray(out, m, n, error);
@@ -102,6 +103,7 @@ void static_matmul(float* x, float* y, float* out, int m, int n, int k) {
         @"matmul" : out__,
     };
 
+    // run the model
     if (m == 1 && n == 32000 && k == 4096) {
         [lm_head_model predictionFromFeatures:inFeatures options:opts error:&error];
         handle_errors(error);

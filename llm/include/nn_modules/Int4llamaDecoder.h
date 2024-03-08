@@ -56,6 +56,14 @@ class Int4llamaDecoder {
     float16_t* last_hidden_states_buf = nullptr;
     float* hidden_states_buf = nullptr;
     float16_t* hidden_states_half_buf = nullptr;
+#elif defined(QM_COREML)
+    Embedding embed_tokens;
+    LlamaRMSNorm_coreml norm;
+
+    float* attention_mask_buf;
+    float* pos_embeds_buf;
+    float* last_hidden_states_buf;
+    float* hidden_states_buf;
 #else
     Embedding embed_tokens;
     LlamaRMSNorm norm;

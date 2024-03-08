@@ -34,9 +34,10 @@ void init_batched_matmul_transpose() {
 // TODO: use asynchronous ANE prediction to avoid blocking pipeline
 
 void matmul_transposed(float * a, float * b, float * c, int m, int n, int k) {
-    if (k != 128) {
-        std::cout << "not well formed!??\n";
-    }
+    assert(k == 128 && "only k = 128 supported!");
+    assert(m >= 1 && m <= 256 && "only 1 <= m <= 256 supported!");
+    assert(n >= 1 && n <= 256 && "only 1 <= n <= 256 supported!");
+    
     MLMultiArray * a__ = float_to_MLMultiArray(a, m, k, error);
     MLMultiArray * b__ = float_to_MLMultiArray(b, n, k, error);
     MLMultiArray * c__ = float_to_MLMultiArray(c, m, n, error);

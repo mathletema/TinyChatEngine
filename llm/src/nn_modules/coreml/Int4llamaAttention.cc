@@ -184,7 +184,7 @@ Int4llamaAttention::Int4llamaAttention(std::string param_path, const struct mode
     Matrix3D<float> cos(cos_buf, 1, config.max_sqlen, (config.embed_dim / config.num_heads));
     Matrix3D<float> sin(sin_buf, 1, config.max_sqlen, (config.embed_dim / config.num_heads));
 
-    this->rotary_pos_emb = RotaryPosEmb(cos, sin, param_path + "/rotary_emb");
+    this->rotary_pos_emb = RotaryPosEmb_coreml(cos, sin, param_path + "/rotary_emb");
 
     float qk_bmm_alpha;
     read_to_array((param_path + "/qk_bmm/alpha.bin").c_str(), &qk_bmm_alpha, 1);
@@ -361,7 +361,7 @@ struct Int4llamaAttention_output Int4llamaAttention::forward(std::string param_p
     this->qk_bmm.forward(query_states, final_key_states, attn_weights);
 
     // Add mask
-    batch_Add(attn_weights, input.attention_mask, attn_weights);
+    batch_Add_coreml(attn_weights, input.attention_mask, attn_weights);
     for (int i = 0; i < attn_weights.length(); i++) {
         if (std::isinf(attn_weights.m_data[i])) {
             attn_weights.m_data[i] = std::numeric_limits<float>::lowest();
@@ -370,7 +370,7 @@ struct Int4llamaAttention_output Int4llamaAttention::forward(std::string param_p
 
     // Softmax QK
     Matrix3D<float> attn_probs(attn_weights_arr, this->num_heads, sqlen, tgz);
-    softmax(attn_weights, attn_probs, 2);
+    softmax_coreml(attn_weights, attn_probs, 2);
 
     // Legacy implementation
     // Matrix3D<float> value_states_transpose(value_states_transpose_arr, this->num_heads, this->head_dim, tgz);

@@ -79,7 +79,7 @@ class Int4llamaAttention {
     int max_sqlen;
 #elif defined(QM_COREML)
     Linear_FP_int4 k_proj, v_proj, q_proj, o_proj, qkv_proj;
-    RotaryPosEmb rotary_pos_emb;
+    RotaryPosEmb_coreml rotary_pos_emb;
     BMM_F32T_coreml qk_bmm, pv_bmm;
     void unshape(Matrix3D<float> shaped, Matrix3D<float> unshape, int sqlen);
     void shape(Matrix3D<float> unshape, Matrix3D<float> shaped, int sqlen);

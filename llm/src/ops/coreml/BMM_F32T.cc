@@ -22,7 +22,7 @@ void BMM_F32T_coreml::forward(const Matrix3D<float> &a, const Matrix3D<float> &w
     assert(a.m_dim_y == c.m_dim_y);  // m
     assert(b.m_dim_y == c.m_dim_z);  // n
 
-    coreml::batched_matmul_transposed(a.m_data, b.m_data, c.m_data, b_size, m, n, k, alpha);
+    coreml::batched_matmul_transposed(a.m_data, b.m_data, c.m_data, b_size, m, n, k);
 
     for (int i = 0; i <= b_size * m * n; i++) {
         c.m_data[i] *= alpha;

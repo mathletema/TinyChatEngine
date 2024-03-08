@@ -23,4 +23,14 @@ MLMultiArray * float_to_MLMultiArray(float * data, int m, int n, NSError * error
     return result;
 }
 
+MLMultiArray * float_to_MLMultiArray_3D(float * data, int m, int n, int k, NSError * error) {
+    MLMultiArray * result = [[MLMultiArray alloc] initWithDataPointer:((void *) data)
+                                                                shape:@[ @(m), @(n), @(k) ]
+                                                            dataType:MLMultiArrayDataTypeFloat32
+                                                             strides:@[ @(n*k), @(k), @(1) ]
+                                                         deallocator:nil
+                                                               error:&error];
+    return result;
+}
+
 }

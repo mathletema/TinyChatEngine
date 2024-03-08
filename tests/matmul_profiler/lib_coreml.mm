@@ -37,7 +37,9 @@ void init() {
     MLModelConfiguration * config;
 
     config = [MLModelConfiguration new];
-    config.computeUnits = MLComputeUnitsAll;
+    // config.computeUnits = MLComputeUnitsAll;
+    config.computeUnits = MLComputeUnitsCPUAndNeuralEngine;
+
 
     // init lm_head
     module_path =

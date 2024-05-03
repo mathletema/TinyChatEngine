@@ -7,7 +7,7 @@ PROJECT_PATH = "$(shell realpath ..)"
 CFLAGS += -DPROJECT_PATH=\"$(PROJECT_PATH)\"
 INCLUDE_DIRS = -I../../kernels/ -I../../llm/half-2.2.0/include/
 
-CFLAGS += -g -S -emit-llvm
+# CFLAGS += -g -S -emit-llvm
 
 SRCS = main.cpp 
 OBJS = main.o

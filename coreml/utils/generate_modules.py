@@ -15,6 +15,8 @@ if __name__ == "__main__":
     # gen_normalize(MODULES_PATH + "llama_rmsnorm_4096.mlpackage")
 
     gen_static_matmul_transpose(1, 32000, 4096, MODULES_PATH +  "lm_head.mlpackage")
+    gen_static_identity(1, 32000, 4096, MODULES_PATH +  "lm_head_identity.mlpackage")
     gen_static_matmul_transpose(1, 4096, 4096, MODULES_PATH +  "QKV_out_proj.mlpackage")
     gen_static_matmul_transpose(1, 4096, 11008, MODULES_PATH +  "down_proj.mlpackage")
     gen_static_matmul_transpose(1, 11008, 4096, MODULES_PATH +  "gate_proj.mlpackage")
+

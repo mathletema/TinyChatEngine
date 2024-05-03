@@ -11,6 +11,7 @@ BMM_F32T_coreml::BMM_F32T_coreml(float _alpha) {
 }
 
 void BMM_F32T_coreml::forward(const Matrix3D<float> &a, const Matrix3D<float> &weight, Matrix3D<float> &c) {
+
     const Matrix3D<float> b = weight;
     const int m = a.m_dim_y, n = b.m_dim_y, k = a.m_dim_z, b_size = b.m_dim_x;
     const long long ops = (long long)b_size * 2 * (long long)m * (long long)n * (long long)k;

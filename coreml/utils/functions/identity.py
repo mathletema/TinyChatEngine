@@ -3,6 +3,7 @@ from torch import nn
 
 import coremltools as ct
 from coremltools.converters.mil.mil import Builder, Function, Program
+from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.backend.mil.load import load
 
 def gen_identity(dim_x, out_path):
@@ -29,5 +30,16 @@ def gen_identity(dim_x, out_path):
         outputs=[ct.TensorType(name="x")],
         convert_to="mlprogram",
     )
+
+    model.save(out_path)
+
+def gen_static_identity(m, n, k, out_path):
+    @mb.program(input_specs=[mb.TensorSpec(shape=(m, k)), mb.TensorSpec(shape=(n, k))])
+    def prog(x, y):
+        return x
+    
+    print(prog)
+
+    model = ct.convert(prog)
 
     model.save(out_path)
